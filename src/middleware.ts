@@ -8,12 +8,11 @@ const AUTH_ROUTES = new Set([
   '/forgot-password',
   '/reset-password',
   '/check-email',
+  '/auth/confirmed', // <- NÃO bloquear
 ]);
 
-const isPrivate = (pathname: string) =>
-  pathname.startsWith('/dashboard') ||
-  pathname.startsWith('/app') ||
-  pathname.startsWith('/conta');
+const isPrivate = (p: string) =>
+  p.startsWith('/dashboard') || p.startsWith('/app') || p.startsWith('/conta');
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
@@ -27,15 +26,10 @@ export async function middleware(req: NextRequest) {
   const path = url.pathname;
   const search = url.search ?? '';
 
-  // página pública de pós-login
-  if (path.startsWith('/auth/confirmed')) {
-    return res;
-  }
-
   if (!session && isPrivate(path)) {
-    const redirect = new URL('/login', url.origin);
-    redirect.searchParams.set('redirect', `${path}${search}`);
-    return NextResponse.redirect(redirect);
+    const to = new URL('/login', url);
+    to.searchParams.set('redirect', `${path}${search}`);
+    return NextResponse.redirect(to);
   }
 
   if (session && AUTH_ROUTES.has(path) && path !== '/reset-password') {
