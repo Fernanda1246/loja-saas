@@ -15,7 +15,7 @@ export default function AuthCallbackPage() {
       const redirect = params.get('redirect') || '/dashboard';
 
       try {
-        // 1) Fluxo PKCE (Google -> Supabase -> sua app com ?code=...)
+        // 1) Fluxo com ?code= (PKCE)
         const code = params.get('code');
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -25,7 +25,7 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        // 2) Fluxo "implicit" (Google -> Supabase -> sua app com #access_token=...)
+        // 2) Fluxo com #access_token (implicito)
         if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
           const { error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
           if (error) throw error;
@@ -34,7 +34,7 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        // 3) Nada reconhecido: volta para o login
+        // 3) Nada reconhecido
         router.replace('/login?e=callback-not-recognized');
       } catch (e: any) {
         router.replace('/login?e=' + encodeURIComponent(e?.message || 'oauth-error'));
