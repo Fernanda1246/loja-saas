@@ -71,15 +71,17 @@ function LoginContent() {
     setErr(null);
     try {
       const redirect = safeRedirect(params.get('redirect')); // ex.: "/dashboard"
-      const origin =
-        typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || '';
-      const redirectTo = `${origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`;
+const redirectTo =
+  typeof window !== 'undefined'
+    ? `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`
+    : undefined;
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo },
-      });
-      if (error) throw error;
+const { error } = await supabase.auth.signInWithOAuth({
+  provider: 'google',
+  options: { redirectTo },
+});
+if (error) throw error;
+
     } catch (e) {
       const msg = e instanceof Error ? e.message : null;
       setErr(msg || 'Não foi possível iniciar o login com Google.');

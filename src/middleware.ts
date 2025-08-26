@@ -1,3 +1,4 @@
+// middleware.ts
 import { NextResponse, type NextRequest } from 'next/server';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
@@ -7,7 +8,6 @@ const AUTH_ROUTES = new Set([
   '/forgot-password',
   '/reset-password',
   '/check-email',
-  '/auth/callback', // PERMITIR!
 ]);
 
 const isPrivate = (pathname: string) =>
@@ -16,28 +16,28 @@ const isPrivate = (pathname: string) =>
   pathname.startsWith('/conta');
 
 export async function middleware(req: NextRequest) {
+  const url = req.nextUrl;
+  const path = url.pathname;
+
+  // ✅ NÃO INTERCEPTAR o callback do OAuth
+  if (path.startsWith('/auth/callback')) {
+    return NextResponse.next();
+  }
+
   const res = NextResponse.next();
   const supabase = createMiddlewareClient({ req, res });
-
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const url = req.nextUrl;
-  const path = url.pathname;
-  const search = url.search ?? '';
-
-  // NUNCA bloqueie o callback
-  if (path.startsWith('/auth/callback')) return res;
-
-  // Bloqueio de privadas
+  // 1) Bloquear privadas sem sessão
   if (!session && isPrivate(path)) {
     const redirect = new URL('/login', url.origin);
-    redirect.searchParams.set('redirect', `${path}${search}`);
+    redirect.searchParams.set('redirect', `${path}${url.search}`);
     return NextResponse.redirect(redirect);
   }
 
-  // Usuário logado não entra nas rotas de auth (exceto reset)
+  // 2) Redirecionar logado para /dashboard, se tentar acessar páginas de auth (exceto reset)
   if (session && AUTH_ROUTES.has(path) && path !== '/reset-password') {
     return NextResponse.redirect(new URL('/dashboard', url));
   }
