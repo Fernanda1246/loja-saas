@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
@@ -22,7 +22,8 @@ function EyeOff(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export default function LoginPage() {
+/** Conteúdo real da página (usa useSearchParams aqui dentro) */
+function LoginContent() {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -66,7 +67,6 @@ export default function LoginPage() {
     }
   }
 
-  // === Opção 2: OAuth Google ===
   async function handleGoogle() {
     setErr(null);
     try {
@@ -78,14 +78,12 @@ export default function LoginPage() {
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo,
-          // se precisar de refresh_token: queryParams: { access_type: 'offline', prompt: 'consent' }
-        },
+        options: { redirectTo },
       });
       if (error) throw error; // navegador redireciona pro Google
-    } catch (e: any) {
-      setErr(e?.message || 'Não foi possível iniciar o login com Google.');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : null;
+      setErr(msg || 'Não foi possível iniciar o login com Google.');
     }
   }
 
@@ -93,10 +91,7 @@ export default function LoginPage() {
     <div className="min-h-screen grid lg:grid-cols-2 bg-[#F8FAFC] text-[#0F172A]">
       {/* HERO ESQUERDO (desktop) */}
       <div className="relative hidden lg:flex items-center justify-center overflow-hidden">
-        {/* gradiente */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0F766E] via-[#13827A] to-[#06B6D4]" />
-
-        {/* pattern sutil em SVG */}
         <svg
           className="absolute inset-0 w-full h-full opacity-20"
           aria-hidden="true"
@@ -113,7 +108,6 @@ export default function LoginPage() {
           })}
         </svg>
 
-        {/* conteúdo do hero (neutro) */}
         <div className="relative z-10 max-w-md px-10 py-12 text-white">
           <h1 className="text-3xl font-semibold">Acesse sua conta</h1>
           <p className="mt-3 text-white/90">
@@ -135,9 +129,7 @@ export default function LoginPage() {
               LJ
             </div>
             <h2 className="mt-4 text-2xl font-semibold">Entrar</h2>
-            <p className="mt-1 text-[#475569] text-sm">
-              Faça login para continuar.
-            </p>
+            <p className="mt-1 text-[#475569] text-sm">Faça login para continuar.</p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
@@ -178,7 +170,6 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* espaço para mensagens */}
             <div className="min-h-[20px]">
               {err && <p className="text-sm text-red-600">{err}</p>}
             </div>
@@ -202,14 +193,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* separador */}
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-[#E2E8F0]" />
             <span className="text-xs text-[#64748B]">ou</span>
             <div className="h-px flex-1 bg-[#E2E8F0]" />
           </div>
 
-          {/* Google OAuth */}
           <button
             type="button"
             onClick={handleGoogle}
@@ -232,3 +221,15 @@ export default function LoginPage() {
     </div>
   );
 }
+
+/** Wrapper exigido pelo Next 15 para páginas que usam useSearchParams */
+export default function LoginPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+// evita pré-render estático em páginas de auth (opcional)
+export const dynamic = 'force-dynamic';
