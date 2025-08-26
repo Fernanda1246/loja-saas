@@ -67,13 +67,14 @@ function LoginContent() {
     }
   }
 
+  // Google OAuth: deixa o Supabase fazer o callback e voltar direto para o destino final
   async function handleGoogle() {
     setErr(null);
     try {
-      const redirect = safeRedirect(params.get('redirect'));
+      const redirect = safeRedirect(params.get('redirect')); // ex.: "/dashboard"
       const redirectTo =
         typeof window !== 'undefined'
-          ? `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`
+          ? `${window.location.origin}${redirect}` // ex.: http://localhost:3000/dashboard
           : undefined;
 
       const { error } = await supabase.auth.signInWithOAuth({
