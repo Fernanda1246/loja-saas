@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
-/** Ícones (SVG, sem dependência) */
+/** Ícones (SVG) */
 function Eye(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
@@ -33,12 +33,10 @@ function LoginContent() {
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // aceita só caminhos internos, evita rota extinta (/auth/callback)
   function safeRedirect(url: string | null): string {
     if (!url) return '/dashboard';
-    if (!url.startsWith('/') || url.startsWith('//')) return '/dashboard';
-    if (url === '/auth/callback') return '/dashboard';
-    return url;
+    const isInternal = url.startsWith('/') && !url.startsWith('//');
+    return isInternal ? url : '/dashboard';
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -64,25 +62,25 @@ function LoginContent() {
     if (data?.user) {
       const to = safeRedirect(params.get('redirect'));
       router.replace(to);
-      router.refresh(); // garante re-render com a sessão nova
+      router.refresh();
     }
   }
 
-  // Google OAuth: Supabase faz o callback e volta direto ao destino final (sem /auth/callback)
+  /** Google OAuth → redireciona para /auth/confirmed */
   async function handleGoogle() {
     setErr(null);
     try {
-      const redirect = safeRedirect(params.get('redirect')); // ex.: "/dashboard"
+      const redirect = safeRedirect(params.get('redirect')); // p.ex. "/dashboard"
       const redirectTo =
         typeof window !== 'undefined'
-          ? `${window.location.origin}${redirect}` // ex.: https://seuapp.vercel.app/dashboard
+          ? `${window.location.origin}/auth/confirmed?redirect=${encodeURIComponent(redirect)}`
           : undefined;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo },
       });
-      if (error) throw error; // navegador redireciona pro Google
+      if (error) throw error;
     } catch (e) {
       const msg = e instanceof Error ? e.message : null;
       setErr(msg || 'Não foi possível iniciar o login com Google.');
@@ -91,15 +89,10 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-[#F8FAFC] text-[#0F172A]">
-      {/* HERO ESQUERDO (desktop) */}
+      {/* HERO */}
       <div className="relative hidden lg:flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0F766E] via-[#13827A] to-[#06B6D4]" />
-        <svg
-          className="absolute inset-0 w-full h-full opacity-20"
-          aria-hidden="true"
-          viewBox="0 0 800 600"
-          preserveAspectRatio="none"
-        >
+        <svg className="absolute inset-0 w-full h-full opacity-20" aria-hidden="true" viewBox="0 0 800 600" preserveAspectRatio="none">
           <path d="M-20,500 C120,420 220,560 360,480 C500,400 620,520 780,440" fill="none" stroke="white" strokeWidth="2"/>
           <path d="M-20,420 C120,340 220,480 360,400 C500,320 620,440 780,360" fill="none" stroke="white" strokeWidth="1.5"/>
           <path d="M-20,340 C120,260 220,400 360,320 C500,240 620,360 780,280" fill="none" stroke="white" strokeWidth="1"/>
@@ -112,9 +105,7 @@ function LoginContent() {
 
         <div className="relative z-10 max-w-md px-10 py-12 text-white">
           <h1 className="text-3xl font-semibold">Acesse sua conta</h1>
-          <p className="mt-3 text-white/90">
-            Tudo que você precisa para gerenciar sua loja em um só lugar.
-          </p>
+          <p className="mt-3 text-white/90">Tudo que você precisa para gerenciar sua loja em um só lugar.</p>
           <ul className="mt-6 space-y-2 text-white/90">
             <li>• Catálogo e estoque centralizados</li>
             <li>• Acompanhamento de vendas em tempo real</li>
@@ -123,13 +114,11 @@ function LoginContent() {
         </div>
       </div>
 
-      {/* CARD DE LOGIN (direita / mobile = única coluna) */}
+      {/* CARD */}
       <div className="flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md bg-white border border-[#E2E8F0] rounded-2xl shadow-[0_12px_32px_rgba(2,6,23,0.08)] p-6 sm:p-8">
           <div className="mb-6">
-            <div className="inline-flex size-10 items-center justify-center rounded-full bg-[#13827A] text-white font-semibold">
-              LJ
-            </div>
+            <div className="inline-flex size-10 items-center justify-center rounded-full bg-[#13827A] text-white font-semibold">LJ</div>
             <h2 className="mt-4 text-2xl font-semibold">Entrar</h2>
             <p className="mt-1 text-[#475569] text-sm">Faça login para continuar.</p>
           </div>
@@ -172,18 +161,14 @@ function LoginContent() {
               </button>
             </div>
 
-            <div className="min-h-[20px]">
-              {err && <p className="text-sm text-red-600">{err}</p>}
-            </div>
+            <div className="min-h-[20px]">{err && <p className="text-sm text-red-600">{err}</p>}</div>
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 text-[#475569]">
                 <input type="checkbox" className="rounded border-[#E2E8F0] text-[#13827A] focus:ring-[#13827A]" />
                 Lembrar de mim
               </label>
-              <Link href="/forgot-password" className="text-[#4F46E5] hover:opacity-80">
-                Esqueci minha senha
-              </Link>
+              <Link href="/forgot-password" className="text-[#4F46E5] hover:opacity-80">Esqueci minha senha</Link>
             </div>
 
             <button
@@ -213,10 +198,7 @@ function LoginContent() {
           </button>
 
           <p className="mt-6 text-center text-sm text-[#475569]">
-            Não tem conta?{' '}
-            <Link href="/signup" className="text-[#4F46E5] hover:opacity-80">
-              Criar conta
-            </Link>
+            Não tem conta? <Link href="/signup" className="text-[#4F46E5] hover:opacity-80">Criar conta</Link>
           </p>
         </div>
       </div>
@@ -224,7 +206,6 @@ function LoginContent() {
   );
 }
 
-/** Wrapper exigido pelo Next 15 para páginas que usam useSearchParams */
 export default function LoginPageWrapper() {
   return (
     <Suspense fallback={null}>
@@ -233,5 +214,4 @@ export default function LoginPageWrapper() {
   );
 }
 
-// evita pré-render estático em páginas de auth (opcional)
 export const dynamic = 'force-dynamic';
