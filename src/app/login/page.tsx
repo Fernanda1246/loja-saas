@@ -33,11 +33,12 @@ function LoginContent() {
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // aceita só caminhos internos para evitar open-redirect
+  // aceita só caminhos internos, evita rota extinta (/auth/callback)
   function safeRedirect(url: string | null): string {
     if (!url) return '/dashboard';
-    const isInternal = url.startsWith('/') && !url.startsWith('//');
-    return isInternal ? url : '/dashboard';
+    if (!url.startsWith('/') || url.startsWith('//')) return '/dashboard';
+    if (url === '/auth/callback') return '/dashboard';
+    return url;
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -67,14 +68,14 @@ function LoginContent() {
     }
   }
 
-  // Google OAuth: deixa o Supabase fazer o callback e voltar direto para o destino final
+  // Google OAuth: Supabase faz o callback e volta direto ao destino final (sem /auth/callback)
   async function handleGoogle() {
     setErr(null);
     try {
       const redirect = safeRedirect(params.get('redirect')); // ex.: "/dashboard"
       const redirectTo =
         typeof window !== 'undefined'
-          ? `${window.location.origin}${redirect}` // ex.: http://localhost:3000/dashboard
+          ? `${window.location.origin}${redirect}` // ex.: https://seuapp.vercel.app/dashboard
           : undefined;
 
       const { error } = await supabase.auth.signInWithOAuth({
