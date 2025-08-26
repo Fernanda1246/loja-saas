@@ -4,47 +4,46 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
-export const dynamic = 'force-dynamic';
-
-export default function AuthCallbackPage() {
+export default function OAuthCallbackPage() {
   const router = useRouter();
   const params = useSearchParams();
 
   useEffect(() => {
     (async () => {
-      const redirect = params.get('redirect') || '/dashboard';
-
       try {
-        // 1) Fluxo com ?code= (PKCE)
+        // 1) Fluxo PKCE (Supabase retorna ?code=...)
         const code = params.get('code');
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-          router.replace(redirect);
-          router.refresh();
-          return;
+          await supabase.auth.exchangeCodeForSession(code);
+        } else {
+          // 2) Fluxo implicit (Supabase volta com #access_token=...)
+          const hash = typeof window !== 'undefined' ? window.location.hash : '';
+          if (hash && hash.includes('access_token')) {
+            const qs = new URLSearchParams(hash.slice(1));
+            const access_token = qs.get('access_token') || '';
+            const refresh_token = qs.get('refresh_token') || '';
+            if (access_token) {
+              await supabase.auth.setSession({ access_token, refresh_token });
+            }
+          }
         }
-
-        // 2) Fluxo com #access_token (implicito)
-        if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
-          const { error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
-          if (error) throw error;
-          router.replace(redirect);
-          router.refresh();
-          return;
-        }
-
-        // 3) Nada reconhecido
-        router.replace('/login?e=callback-not-recognized');
-      } catch (e: any) {
-        router.replace('/login?e=' + encodeURIComponent(e?.message || 'oauth-error'));
+      } catch (e) {
+        // se algo falhar, segue pro destino do mesmo jeito
+        console.error('OAuth Callback error:', e);
+      } finally {
+        const redirect = params.get('redirect') || '/dashboard';
+        router.replace(redirect);
       }
     })();
-  }, [params, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center text-[#0F172A]">
-      Finalizando login…
+    <div className="min-h-screen flex items-center justify-center text-sm text-slate-600">
+      Conectando com sua conta…
     </div>
   );
 }
+
+// Evita pré-render estatico
+export const dynamic = 'force-dynamic';
