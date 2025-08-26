@@ -1,4 +1,3 @@
-// middleware.ts (raiz)
 import { NextResponse, type NextRequest } from 'next/server';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
@@ -8,11 +7,13 @@ const AUTH_ROUTES = new Set([
   '/forgot-password',
   '/reset-password',
   '/check-email',
-  '/auth/confirmed', // <- NÃO bloquear
+  '/auth/callback', // PERMITIR!
 ]);
 
-const isPrivate = (p: string) =>
-  p.startsWith('/dashboard') || p.startsWith('/app') || p.startsWith('/conta');
+const isPrivate = (pathname: string) =>
+  pathname.startsWith('/dashboard') ||
+  pathname.startsWith('/app') ||
+  pathname.startsWith('/conta');
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
@@ -26,12 +27,17 @@ export async function middleware(req: NextRequest) {
   const path = url.pathname;
   const search = url.search ?? '';
 
+  // NUNCA bloqueie o callback
+  if (path.startsWith('/auth/callback')) return res;
+
+  // Bloqueio de privadas
   if (!session && isPrivate(path)) {
-    const to = new URL('/login', url);
-    to.searchParams.set('redirect', `${path}${search}`);
-    return NextResponse.redirect(to);
+    const redirect = new URL('/login', url.origin);
+    redirect.searchParams.set('redirect', `${path}${search}`);
+    return NextResponse.redirect(redirect);
   }
 
+  // Usuário logado não entra nas rotas de auth (exceto reset)
   if (session && AUTH_ROUTES.has(path) && path !== '/reset-password') {
     return NextResponse.redirect(new URL('/dashboard', url));
   }
