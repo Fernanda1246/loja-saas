@@ -1,52 +1,16 @@
-// middleware.ts
-import { NextResponse, type NextRequest } from 'next/server';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
-
-const AUTH_ROUTES = new Set([
-  '/login',
-  '/signup',
-  '/forgot-password',
-  '/reset-password',
-  '/check-email',
-]);
-
-const isPrivate = (pathname: string) =>
-  pathname.startsWith('/dashboard') ||
-  pathname.startsWith('/app') ||
-  pathname.startsWith('/conta');
+import { type NextRequest } from "next/server";
+import { updateSession } from "./utils/supabase/middleware";
 
 export async function middleware(req: NextRequest) {
-  const url = req.nextUrl;
-  const path = url.pathname;
-
-  // ✅ NÃO INTERCEPTAR o callback do OAuth
-  if (path.startsWith('/auth/callback')) {
-    return NextResponse.next();
-  }
-
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  // 1) Bloquear privadas sem sessão
-  if (!session && isPrivate(path)) {
-    const redirect = new URL('/login', url.origin);
-    redirect.searchParams.set('redirect', `${path}${url.search}`);
-    return NextResponse.redirect(redirect);
-  }
-
-  // 2) Redirecionar logado para /dashboard, se tentar acessar páginas de auth (exceto reset)
-  if (session && AUTH_ROUTES.has(path) && path !== '/reset-password') {
-    return NextResponse.redirect(new URL('/dashboard', url));
-  }
-
-  return res;
+  return updateSession(req);
 }
 
+// NÃO intercepte /api nem assets; use matcher restrito
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/).*)',
+    "/dashboard/:path*",
+    "/orders/:path*",
+    "/products/:path*",
+    "/analytics/:path*",
   ],
 };
