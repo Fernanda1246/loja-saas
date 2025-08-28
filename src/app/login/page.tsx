@@ -1,16 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import styles from "./login.module.css";
 
-/** Impede SSG/Prerender no build para esta rota */
-export const dynamic = "force-dynamic";
-
-export default function LoginPage() {
+function LoginInner() {
   const supabase = createClientComponentClient();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
 
@@ -32,7 +28,9 @@ export default function LoginPage() {
       setError("Não foi possível entrar. Verifique suas credenciais.");
       return;
     }
-    router.push(redirect);
+
+    // força reload para o middleware/SSR ver a sessão
+    window.location.assign(redirect);
   }
 
   return (
@@ -65,7 +63,7 @@ export default function LoginPage() {
               />
             </label>
 
-            {/* Senha + botão olho */}
+            {/* Senha + olho */}
             <label className={styles.label}>
               <span>Senha</span>
               <div className={styles.passwordWrap}>
@@ -82,10 +80,10 @@ export default function LoginPage() {
                   type="button"
                   aria-label={showPass ? "Ocultar senha" : "Mostrar senha"}
                   className={styles.eyeBtn}
-                  onClick={() => setShowPass((v) => !v)}
+                  onClick={() => setShowPass(v => !v)}
                 >
                   {showPass ? (
-                    /* olho fechado */
+                    // olho fechado
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C7 20 2.73 16.11 1 12c.74-1.64 1.82-3.12 3.17-4.35"/>
                       <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83"/>
@@ -95,7 +93,7 @@ export default function LoginPage() {
                       <path d="M17.94 6.06 22 2"/>
                     </svg>
                   ) : (
-                    /* olho aberto */
+                    // olho aberto
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/>
                       <circle cx="12" cy="12" r="3"/>
@@ -105,10 +103,8 @@ export default function LoginPage() {
               </div>
             </label>
 
-            {/* erro */}
             {error && <p className={styles.error}>{error}</p>}
 
-            {/* submit */}
             <button type="submit" className={styles.button} disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
             </button>
@@ -116,5 +112,14 @@ export default function LoginPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  // 👇 Suspense obrigatório quando se usa useSearchParams
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
   );
 }
