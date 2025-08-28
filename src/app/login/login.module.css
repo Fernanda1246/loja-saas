@@ -1,5 +1,3 @@
-/* src/app/login/login.module.css */
-
 /* Layout base */
 .wrapper {
     min-height: 100svh;
@@ -21,12 +19,17 @@
   }
   
   .hero {
+    /* mantém seu gradiente/estética */
     height: 100%;
     background: radial-gradient(80rem 60rem at -10% -10%, #0a7d72 0%, #0b5f59 45%, #084d48 100%);
+    position: relative;
+  
+    /* >>> Novo: centraliza verticalmente o conteúdo <<< */
+    display: flex;
+    min-height: 100vh; /* garante 100% altura no desktop */
   }
   
   .hero::after {
-    /* grade de pontinhos sutil */
     content: "";
     position: absolute;
     inset: 0;
@@ -38,11 +41,15 @@
   .heroInner {
     position: relative;
     margin-inline: clamp(1.5rem, 6vw, 6rem);
-    height: 100%;
+    width: 100%;
+  
+    /* >>> Novo: centraliza verticalmente o conteúdo <<< */
     display: flex;
     flex-direction: column;
-    justify-content: center;        /* <-- centraliza vertical */
+    justify-content: center;
+    min-height: 100%;
     gap: 1.25rem;
+  
     color: #e6fffb;
   }
   
@@ -165,6 +172,7 @@
     font-size: 0.95rem;
   }
   
+  /* Botões */
   .submit {
     height: 46px;
     border: 0;
@@ -203,7 +211,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 10px;                   /* espaço entre ícone e texto */
     border-radius: 12px;
     background: #fff;
     color: #0f2935;
@@ -216,19 +224,19 @@
     box-shadow: 0 6px 18px rgba(40, 60, 80, 0.08);
   }
   .provider:active { transform: translateY(1px); }
-  .provider svg { flex: 0 0 auto; display: block; }
+  
+  /* >>> Novo: classe do ícone */
+  .providerIcon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    flex: 0 0 18px;
+  }
   
   .bottomNote {
     margin-top: .9rem;
     text-align: center;
     color: #5a6a78;
     font-size: .95rem;
-  }
-  
-  .suspense {
-    min-height: 60svh;
-    display: grid;
-    place-items: center;
-    color: #51606f;
   }
   
