@@ -1,27 +1,6 @@
-:root {
-    --bg-hero-from: #0F766E;
-    --bg-hero-mid:  #13827A;
-    --bg-hero-to:   #06B6D4;
-    --bg-page:      #F8FAFC;
-    --text-dark:    #0F172A;
-    --primary:      #0F766E;
-    --primary-2:    #13827A;
-    --radius: 16px;
-    --shadow: 0 10px 24px rgba(2, 8, 23, 0.12);
-    --input-border: #CBD5E1;
-  }
-  
-  * { box-sizing: border-box; }
-  
-  html, body {
-    height: 100%;
-    margin: 0;
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    color: var(--text-dark);
-    background: var(--bg-page);
-  }
-  
-  .page {
+/* === Apenas classes locais === */
+
+.page {
     min-height: 100vh;
     display: flex;
   }
@@ -31,8 +10,8 @@
     flex: 1 1 50%;
     background: linear-gradient(135deg, var(--bg-hero-from), var(--bg-hero-mid), var(--bg-hero-to));
     display: flex;
-    align-items: center;              /* centraliza vertical */
-    justify-content: center;          /* centraliza horizontal */
+    align-items: center;          /* centraliza vertical */
+    justify-content: center;      /* centraliza horizontal */
     padding: 48px;
     text-align: center;
   }
@@ -94,9 +73,7 @@
     background: #fff;
   }
   
-  .input:focus {
-    border-color: var(--bg-hero-to);
-  }
+  .input:focus { border-color: var(--bg-hero-to); }
   
   .passwordWrap {
     position: relative;
@@ -142,7 +119,7 @@
     margin: 4px 0 0;
   }
   
-  /* Responsivo: esconde a lateral azul no mobile */
+  /* Responsivo */
   @media (max-width: 900px) {
     .hero { display: none; }
     .formSide { flex: 1 1 100%; }
