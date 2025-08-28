@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import styles from "./login.module.css";
 
 function LoginContent() {
   const router = useRouter();
@@ -17,10 +18,11 @@ function LoginContent() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
-  // Se logar, redireciona
+  // após logar, redireciona
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((ev) => {
       if (ev === "SIGNED_IN") router.replace(redirect);
@@ -34,12 +36,10 @@ function LoginContent() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) setErr(error.message || "Não foi possível entrar. Tente novamente.");
-    // sucesso: useEffect fará o redirect
+    if (error) setErr(error.message || "Não foi possível entrar.");
   }
 
   async function handleGoogle() {
-    setErr("");
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -48,69 +48,94 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center bg-[#F8FAFC] p-6">
-      <div className="w-full max-w-md rounded-2xl shadow-lg bg-white p-6">
-        <h1 className="text-[#0F172A] text-xl font-semibold mb-4 text-center">Entrar</h1>
+    <div className={styles.shell}>
+      {/* Coluna esquerda (hero) */}
+      <aside className={styles.hero}>
+        <div className={styles.heroInner}>
+          <h2 className={styles.heroTitle}>Bem-vinda de volta!</h2>
+          <p className={styles.heroText}>
+            Gerencie pedidos, produtos e campanhas com praticidade.
+            Tudo em um só lugar — do jeitinho que lojista gosta.
+          </p>
 
-        {err ? (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 p-3 text-sm">
-            {err}
-          </div>
-        ) : null}
-
-        <form onSubmit={handleEmailPassword} className="space-y-3">
-          <div>
-            <label className="block text-sm text-[#0F172A] mb-1">E-mail</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full h-11 rounded-xl border border-slate-300 px-3 outline-none focus:border-[#06B6D4]"
-              placeholder="nome@dominio.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-[#0F172A] mb-1">Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full h-11 rounded-xl border border-slate-300 px-3 outline-none focus:border-[#06B6D4]"
-              placeholder="••••••"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-11 rounded-xl bg-[#0F766E] hover:bg-[#13827A] text-white font-medium disabled:opacity-60"
-          >
-            {loading ? "Entrando…" : "Entrar"}
-          </button>
-        </form>
-
-        <div className="my-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-slate-200" />
-          <span className="text-slate-500 text-xs">ou</span>
-          <div className="h-px flex-1 bg-slate-200" />
+          <ul className={styles.heroList}>
+            <li>Catálogo e estoque centralizados</li>
+            <li>Acompanhamento de vendas em tempo real</li>
+            <li>Recomendações inteligentes</li>
+          </ul>
         </div>
+      </aside>
 
-        <button
-          onClick={handleGoogle}
-          className="w-full h-11 rounded-xl border border-slate-300 hover:bg-slate-50 text-[#0F172A] font-medium"
-        >
-          Entrar com Google
-        </button>
+      {/* Coluna direita (card) */}
+      <main className={styles.main}>
+        <div className={styles.card}>
+          <div className={styles.brandCircle}>LJ</div>
 
-        <p className="mt-4 text-center text-sm">
-          <a href="/forgot-password" className="text-[#0F766E] underline">
-            Esqueci minha senha
-          </a>
-        </p>
-      </div>
+          <h1 className={styles.title}>Entrar</h1>
+          <p className={styles.subtitle}>Acesse sua conta para continuar.</p>
+
+          {err ? <div className={styles.error}>{err}</div> : null}
+
+          <form onSubmit={handleEmailPassword} className={styles.form}>
+            <label className={styles.label}>
+              E-mail
+              <input
+                className={styles.input}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="seuemail@dominio.com"
+              />
+            </label>
+
+            <label className={styles.label}>
+              Sua senha
+              <div className={styles.passwordWrap}>
+                <input
+                  className={styles.input}
+                  type={show ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••"
+                />
+                <button
+                  type="button"
+                  aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+                  className={styles.eye}
+                  onClick={() => setShow((s) => !s)}
+                >
+                  {show ? "🙈" : "👁️"}
+                </button>
+              </div>
+            </label>
+
+            <div className={styles.row}>
+              <label className={styles.remember}>
+                <input type="checkbox" /> Lembrar de mim
+              </label>
+              <a className={styles.linkSm} href="/forgot-password">
+                Esqueci minha senha
+              </a>
+            </div>
+
+            <button className={styles.button} disabled={loading}>
+              {loading ? "Entrando…" : "Entrar"}
+            </button>
+          </form>
+
+          <div className={styles.divider}><span>ou</span></div>
+
+          <button className={styles.provider} onClick={handleGoogle}>
+            Entrar com Google
+          </button>
+
+          <p className={styles.footerHint}>
+            Não tem conta? <a className={styles.linkSm} href="/signup">Criar conta</a>
+          </p>
+        </div>
+      </main>
     </div>
   );
 }
