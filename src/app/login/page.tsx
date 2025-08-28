@@ -1,163 +1,154 @@
-"use client";
-export const dynamic = "force-dynamic";
+'use client';
 
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
-import styles from "./login.module.css";
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
+import styles from './login.module.css';
 
-/* Ícones neutros (SVG) */
-function Eye(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" {...props}>
-      <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" />
-        <circle cx="12" cy="12" r="3" />
-      </g>
-    </svg>
-  );
-}
-function EyeOff(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" {...props}>
-      <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 3l18 18" />
-        <path d="M10.6 10.6a3 3 0 0 0 4.24 4.24" />
-        <path d="M9.88 5.09A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a19.28 19.28 0 0 1-5.09 5.59" />
-        <path d="M6.61 6.61A19.42 19.42 0 0 0 1 12s4 7 11 7a10.94 10.94 0 0 0 2.12-.21" />
-      </g>
-    </svg>
-  );
-}
-
-function LoginContent() {
+export default function LoginPage() {
   const router = useRouter();
   const sp = useSearchParams();
-  const redirect = sp.get("redirect") ?? "/dashboard";
+  const redirect = sp.get('redirect') ?? '/dashboard';
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = React.useMemo(
+    () =>
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      ),
+    []
   );
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [show, setShow] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((ev) => {
-      if (ev === "SIGNED_IN") router.replace(redirect);
+      if (ev === 'SIGNED_IN') router.replace(redirect);
     });
     return () => sub.subscription.unsubscribe();
   }, [supabase, redirect, router]);
 
-  async function handleEmailPassword(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErr("");
-    setLoading(true);
+    setMsg(null);
+    setSubmitting(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) setErr(error.message || "Não foi possível entrar.");
+    setSubmitting(false);
+    if (error) {
+      setMsg(error.message);
+      return;
+    }
+    router.replace(redirect);
   }
 
   async function handleGoogle() {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    setMsg(null);
     await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${origin}/auth/callback?redirect=${redirect}` },
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
   }
 
   return (
-    <div className={styles.shell}>
-      {/* Hero */}
-      <aside className={styles.hero}>
-        <div className={styles.heroInner}>
-          <h2 className={styles.heroTitle}>Bem-vinda de volta!</h2>
-          <p className={styles.heroText}>
-            Gerencie pedidos, produtos e campanhas com praticidade. Tudo em um só lugar — do jeitinho que lojista gosta.
-          </p>
-          <ul className={styles.heroList}>
-            <li>Catálogo e estoque centralizados</li>
-            <li>Acompanhamento de vendas em tempo real</li>
-            <li>Recomendações inteligentes</li>
-          </ul>
+    <main className={styles.wrapper}>
+      {/* Lado esquerdo (hero) */}
+      <section className={styles.left}>
+        <div className={styles.hero}>
+          <div className={styles.heroInner}>
+            <h1 className={styles.heroTitle}>Bem-vinda de volta!</h1>
+            <p className={styles.heroLead}>
+              Gerencie pedidos, produtos e campanhas com praticidade.
+              Tudo em um só lugar — do jeitinho que lojista gosta.
+            </p>
+            <ul className={styles.heroList}>
+              <li>Catálogo e estoque centralizados</li>
+              <li>Acompanhamento de vendas em tempo real</li>
+              <li>Recomendações inteligentes</li>
+            </ul>
+          </div>
         </div>
-      </aside>
+      </section>
 
-      {/* Card */}
-      <main className={styles.main}>
-        <div className={styles.card}>
-          <div className={styles.brandCircle}>LJ</div>
-          <h1 className={styles.title}>Entrar</h1>
+      {/* Lado direito (card de login) */}
+      <section className={styles.right}>
+        <div className={styles.formCard}>
+          <div className={styles.brand}>LJ</div>
+          <h2 className={styles.title}>Entrar</h2>
           <p className={styles.subtitle}>Acesse sua conta para continuar.</p>
 
-          {err ? <div className={styles.error}>{err}</div> : null}
-
-          <form onSubmit={handleEmailPassword} className={styles.form}>
+          <form onSubmit={handleSubmit} className={styles.form}>
             <label className={styles.label}>
-              E-mail
+              <span className={styles.labelText}>E-mail</span>
               <input
                 className={styles.input}
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="seuemail@dominio.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </label>
 
             <label className={styles.label}>
-              Sua senha
-              <div className={styles.passwordWrap}>
-                <input
-                  className={styles.input}
-                  type={show ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="••••••"
-                />
-                <button
-                  type="button"
-                  aria-label={show ? "Ocultar senha" : "Mostrar senha"}
-                  className={styles.eye}
-                  onClick={() => setShow((s) => !s)}
-                >
-                  {show ? <EyeOff /> : <Eye />}
-                </button>
-              </div>
+              <span className={styles.labelText}>Sua senha</span>
+              <input
+                className={styles.input}
+                type="password"
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </label>
 
-            <div className={styles.row}>
-              <label className={styles.remember}>
-                <input type="checkbox" /> Lembrar de mim
+            <div className={styles.actionsRow}>
+              <label className={styles.checkbox}>
+                <input type="checkbox" /> <span>Lembrar de mim</span>
               </label>
-              <a className={styles.linkSm} href="/forgot-password">Esqueci minha senha</a>
+              <a className={styles.link} href="/forgot-password">
+                Esqueci minha senha
+              </a>
             </div>
 
-            <button className={styles.button} disabled={loading}>
-              {loading ? "Entrando…" : "Entrar"}
+            {msg && <div className={styles.feedback}>{msg}</div>}
+
+            <button className={styles.submit} disabled={submitting}>
+              {submitting ? 'Entrando…' : 'Entrar'}
             </button>
           </form>
 
-          <div className={styles.divider}><span>ou</span></div>
+          <div className={styles.divider}>
+            <span>ou</span>
+          </div>
 
           <button className={styles.provider} onClick={handleGoogle}>
-            Entrar com Google
+            <GoogleIcon />
+            <span>Entrar com Google</span>
           </button>
 
-          <p className={styles.footerHint}>
-            Não tem conta? <a className={styles.linkSm} href="/signup">Criar conta</a>
+          <p className={styles.bottomNote}>
+            Não tem conta? <a className={styles.link} href="/signup">Criar conta</a>
           </p>
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }
 
-export default function Page() {
-  return <Suspense fallback={null}><LoginContent /></Suspense>;
+/* ------------ Ícone do Google (SVG) ------------ */
+function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true" {...props}>
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.7 4.9-6.4 8-11.3 8C16 36 10 30 10 22s6-14 14-14c3.6 0 6.9 1.4 9.4 3.6l5.7-5.7C35.4 2.1 30 0 24 0 10.7 0 0 10.7 0 24s10.7 24 24 24c12.9 0 23.6-10.4 23.6-23.2 0-1.6-.2-2.8-.4-4.3z"/>
+      <path fill="#FF3D00" d="M0 24c0 7.3 3.5 13.8 9 18l6.6-5.4C12 34 10 29.5 10 24c0-5.5 2-10 5.6-12.6L9 6C3.5 10.2 0 16.7 0 24z"/>
+      <path fill="#4CAF50" d="M24 48c6.5 0 12.4-2.5 16.7-6.5l-6.7-5.5C31.3 38 27.8 39.3 24 39.3c-4.9 0-9.1-2.7-11.3-6.7L6 38.9C10.3 44.2 16.7 48 24 48z"/>
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3C33.9 33.3 29.4 36 24 36c-4.9 0-9.1-2.7-11.3-6.7L6 38.9C10.3 44.2 16.7 48 24 48c12.9 0 23.6-10.4 23.6-23.2 0-1.6-.2-2.8-.4-4.3z"/>
+    </svg>
+  );
 }
