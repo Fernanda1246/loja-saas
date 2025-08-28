@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Eye, EyeOff } from "lucide-react"; // ícones do olho
+import styles from "./login.module.css";
 
 export default function LoginPage() {
   const supabase = createClientComponentClient();
@@ -11,102 +11,101 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     setLoading(false);
-
     if (error) {
       setError("Não foi possível entrar. Verifique suas credenciais.");
-    } else {
-      router.push("/dashboard");
+      return;
     }
-  };
+    router.push("/dashboard");
+  }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Lado esquerdo - área azul */}
-      <div className="w-1/2 bg-gradient-to-br from-[#0F766E] via-[#13827A] to-[#06B6D4] flex items-center justify-center">
-        <h1 className="text-white text-3xl font-bold text-center px-6 leading-snug">
-          Bem-vindo de volta! <br />
-          Acesse sua conta para continuar
+    <div className={styles.page}>
+      {/* Lado esquerdo (azul) */}
+      <section className={styles.hero}>
+        <h1 className={styles.heroTitle}>
+          Bem-vindo de volta!<br />
+          <span className={styles.heroSubtitle}>Acesse sua conta para continuar</span>
         </h1>
-      </div>
+      </section>
 
-      {/* Lado direito - formulário */}
-      <div className="w-1/2 flex items-center justify-center bg-[#F8FAFC]">
-        <div className="bg-white shadow-lg rounded-2xl p-8 w-[380px]">
-          <h2 className="text-2xl font-semibold text-[#0F172A] mb-6 text-center">
-            Login
-          </h2>
+      {/* Lado direito (form) */}
+      <section className={styles.formSide}>
+        <div className={styles.card}>
+          <h2 className={styles.title}>Login</h2>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            {/* E-mail */}
-            <div>
-              <label className="block text-sm font-medium text-[#0F172A] mb-1">
-                E-mail
-              </label>
+          <form onSubmit={handleLogin} className={styles.form}>
+            {/* Email */}
+            <label className={styles.label}>
+              <span>E-mail</span>
               <input
+                className={styles.input}
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#06B6D4]"
                 placeholder="seuemail@exemplo.com"
+                required
               />
-            </div>
+            </label>
 
-            {/* Senha com olho */}
-            <div>
-              <label className="block text-sm font-medium text-[#0F172A] mb-1">
-                Senha
-              </label>
-              <div className="relative">
+            {/* Senha + olho */}
+            <label className={styles.label}>
+              <span>Senha</span>
+              <div className={styles.passwordWrap}>
                 <input
-                  type={showPassword ? "text" : "password"}
+                  className={styles.input}
+                  type={showPass ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#06B6D4]"
                   placeholder="••••••••"
+                  required
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-[#0F766E]"
+                  aria-label={showPass ? "Ocultar senha" : "Mostrar senha"}
+                  className={styles.eyeBtn}
+                  onClick={() => setShowPass((v) => !v)}
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPass ? (
+                    // EyeOff (inline)
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C7 20 2.73 16.11 1 12c.74-1.64 1.82-3.12 3.17-4.35"/>
+                      <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83"/>
+                      <path d="M6.1 6.1 1 1"/>
+                      <path d="m22.54 11.88c-1.3 2.59-4.55 6.12-10.54 6.12"/>
+                      <path d="M14.12 9.88a2 2 0 0 0-2.83-2.83"/>
+                      <path d="M17.94 6.06 22 2"/>
+                    </svg>
+                  ) : (
+                    // Eye (inline)
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
                 </button>
               </div>
-            </div>
+            </label>
 
-            {/* Erro */}
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
+            {error && <p className={styles.error}>{error}</p>}
 
-            {/* Botão */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#0F766E] hover:bg-[#13827A] text-white py-2 rounded-lg font-semibold transition"
-            >
+            <button type="submit" className={styles.button} disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
             </button>
           </form>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

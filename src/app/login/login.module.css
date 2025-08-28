@@ -1,178 +1,150 @@
-/* Layout base */
-.wrap {
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 560px;
-    gap: 0;
-    background: #f6f8fa;
+:root {
+    --bg-hero-from: #0F766E;
+    --bg-hero-mid:  #13827A;
+    --bg-hero-to:   #06B6D4;
+    --bg-page:      #F8FAFC;
+    --text-dark:    #0F172A;
+    --primary:      #0F766E;
+    --primary-2:    #13827A;
+    --radius: 16px;
+    --shadow: 0 10px 24px rgba(2, 8, 23, 0.12);
+    --input-border: #CBD5E1;
   }
   
-  /* Lado esquerdo */
-  .left {
-    position: relative;
-    background: linear-gradient(135deg, #0d8a80 0%, #0a6a63 60%, #095b55 100%);
-    color: #ecfeff;
+  * { box-sizing: border-box; }
+  
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    color: var(--text-dark);
+    background: var(--bg-page);
+  }
+  
+  .page {
+    min-height: 100vh;
+    display: flex;
+  }
+  
+  /* Lado esquerdo (azul) */
+  .hero {
+    flex: 1 1 50%;
+    background: linear-gradient(135deg, var(--bg-hero-from), var(--bg-hero-mid), var(--bg-hero-to));
+    display: flex;
+    align-items: center;              /* centraliza vertical */
+    justify-content: center;          /* centraliza horizontal */
+    padding: 48px;
+    text-align: center;
+  }
+  
+  .heroTitle {
+    color: #fff;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0;
+  }
+  
+  .heroSubtitle {
+    font-weight: 600;
+  }
+  
+  /* Lado direito (form) */
+  .formSide {
+    flex: 1 1 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-  }
-  .leftInner {
-    width: 100%;
-    max-width: 680px;
-    padding: 56px 48px;
-  }
-  .heroTitle {
-    font-size: 44px;
-    font-weight: 800;
-    margin: 0 0 14px 0;
-    letter-spacing: .2px;
-  }
-  .heroLead {
-    margin: 0 0 20px 0;
-    font-size: 18px;
-    opacity: .95;
-  }
-  .bullets {
-    margin: 0;
-    padding-left: 20px;
-    line-height: 1.8;
-    font-size: 16px;
-  }
-  .dots {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(rgba(255,255,255,.12) 1px, transparent 1px);
-    background-size: 22px 22px;
-    pointer-events: none;
+    padding: 32px;
+    background: var(--bg-page);
   }
   
-  /* Lado direito */
-  .right {
-    display: grid;
-    place-items: center;
-    padding: 28px 24px;
-  }
   .card {
-    width: 100%;
-    max-width: 420px;
+    width: 380px;
     background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(2, 32, 44, .08);
-    padding: 28px 24px 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px;
   }
-  .badge {
-    width: 40px; height: 40px;
-    display: grid; place-items: center;
-    border-radius: 999px;
-    background: #e6f4f2;
-    color: #0f766e;
-    font-weight: 700;
-    margin: 0 auto 10px;
-  }
+  
   .title {
-    text-align: center;
-    margin: 0;
     font-size: 22px;
-    font-weight: 800;
-    color: #0b1220;
-  }
-  .subtitle {
+    font-weight: 700;
     text-align: center;
-    color: #5b616e;
+    margin: 0 0 20px 0;
+    color: var(--text-dark);
+  }
+  
+  .form { display: grid; gap: 14px; }
+  
+  .label {
+    display: grid;
+    gap: 6px;
     font-size: 14px;
-    margin: 6px 0 16px;
   }
   
-  /* Divider "ou" */
-  .or {
-    position: relative;
-    margin: 14px 0;
-    text-align: center;
-    color: #7b8494;
-    font-size: 12px;
-  }
-  .or::before, .or::after {
-    content: "";
-    position: absolute;
-    top: 50%; width: 40%;
-    height: 1px; background: #e6e8ee;
-  }
-  .or::before { left: 0; }
-  .or::after  { right: 0; }
-  
-  /* Google button */
-  .googleBtn {
+  .input {
     width: 100%;
-    height: 44px;
-    border-radius: 12px;
-    border: 1px solid #e2e6ef;
+    height: 40px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    padding: 0 14px;
+    outline: none;
+    transition: border-color .2s ease;
     background: #fff;
+  }
+  
+  .input:focus {
+    border-color: var(--bg-hero-to);
+  }
+  
+  .passwordWrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .eyeBtn {
+    position: absolute;
+    right: 10px;
+    height: 32px;
+    width: 32px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #475569;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    font-weight: 600;
-    color: #0b1220;
+    border-radius: 8px;
+  }
+  
+  .eyeBtn:hover { color: var(--primary); }
+  
+  .button {
+    height: 42px;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
     cursor: pointer;
-    transition: box-shadow .15s ease, transform .02s ease;
+    transition: background .2s ease, transform .02s ease-in-out;
   }
-  .googleBtn:hover {
-    box-shadow: 0 6px 16px rgba(12, 20, 28, .08);
-  }
-  .googleBtn:active { transform: translateY(1px); }
-  .googleIcon { display: inline-flex; }
   
-  /* Rodapé do card */
-  .signup {
-    margin-top: 12px;
-    font-size: 14px;
+  .button:hover { background: var(--primary-2); }
+  .button:active { transform: translateY(1px); }
+  
+  .error {
+    color: #ef4444;
+    font-size: 13px;
     text-align: center;
-    color: #596175;
-  }
-  .signup a {
-    color: #0f766e;
-    text-decoration: none;
-    font-weight: 600;
-  }
-  .signup a:hover { text-decoration: underline; }
-  
-  /* ---- Overrides do Supabase Auth UI (somente dentro do card) ---- */
-  .authCard :global(.supabase-auth-ui_ui-input),
-  .authCard :global(input.sbui-input) {
-    height: 44px !important;
-    border-radius: 12px !important;
-    border: 1px solid #e2e6ef !important;
-    font-size: 15px !important;
-  }
-  .authCard :global(.supabase-auth-ui_ui-button),
-  .authCard :global(button.sbui-btn) {
-    height: 44px !important;
-    border-radius: 12px !important;
-    background-color: #0f766e !important;
-    color: #fff !important;
-    font-weight: 600 !important;
-    border: none !important;
-  }
-  .authCard :global(.supabase-auth-ui_ui-button:hover),
-  .authCard :global(button.sbui-btn:hover) {
-    background-color: #0e645e !important;
-  }
-  .authCard :global(.supabase-auth-ui_ui-anchor),
-  .authCard :global(a.sbui-anchor) {
-    color: #0f766e !important;
-    text-decoration: underline !important;
-    font-size: 13px !important;
+    margin: 4px 0 0;
   }
   
-  /* === BLOCO FINAL: esconder o “olhinho” de mostrar/ocultar senha === */
-  .authCard :global(.sbui-input-icon),
-  .authCard :global(.sbui-input-icon-container),
-  .authCard :global(button[aria-label*="password" i]),
-  .authCard :global(button[aria-label*="senha" i]),
-  .authCard :global(input[type="password"] ~ button),
-  .authCard :global(input[type="password"] + div) {
-    display: none !important;
+  /* Responsivo: esconde a lateral azul no mobile */
+  @media (max-width: 900px) {
+    .hero { display: none; }
+    .formSide { flex: 1 1 100%; }
   }
   
