@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import styles from "./login.module.css";
+
+/** Impede SSG/Prerender no build para esta rota */
+export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,26 +32,26 @@ export default function LoginPage() {
       setError("Não foi possível entrar. Verifique suas credenciais.");
       return;
     }
-    router.push("/dashboard");
+    router.push(redirect);
   }
 
   return (
     <div className={styles.page}>
-      {/* Lado esquerdo (azul) */}
+      {/* Lado esquerdo (hero azul) */}
       <section className={styles.hero}>
         <h1 className={styles.heroTitle}>
-          Bem-vindo de volta!<br />
+          Bem-vindo de volta!
           <span className={styles.heroSubtitle}>Acesse sua conta para continuar</span>
         </h1>
       </section>
 
-      {/* Lado direito (form) */}
+      {/* Lado direito (formulário) */}
       <section className={styles.formSide}>
         <div className={styles.card}>
           <h2 className={styles.title}>Login</h2>
 
-          <form onSubmit={handleLogin} className={styles.form}>
-            {/* Email */}
+          <form onSubmit={handleLogin} className={styles.form} autoComplete="on">
+            {/* E-mail */}
             <label className={styles.label}>
               <span>E-mail</span>
               <input
@@ -56,10 +61,11 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seuemail@exemplo.com"
                 required
+                autoComplete="email"
               />
             </label>
 
-            {/* Senha + olho */}
+            {/* Senha + botão olho */}
             <label className={styles.label}>
               <span>Senha</span>
               <div className={styles.passwordWrap}>
@@ -70,6 +76,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
@@ -78,7 +85,7 @@ export default function LoginPage() {
                   onClick={() => setShowPass((v) => !v)}
                 >
                   {showPass ? (
-                    // EyeOff (inline)
+                    /* olho fechado */
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C7 20 2.73 16.11 1 12c.74-1.64 1.82-3.12 3.17-4.35"/>
                       <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83"/>
@@ -88,7 +95,7 @@ export default function LoginPage() {
                       <path d="M17.94 6.06 22 2"/>
                     </svg>
                   ) : (
-                    // Eye (inline)
+                    /* olho aberto */
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/>
                       <circle cx="12" cy="12" r="3"/>
@@ -98,8 +105,10 @@ export default function LoginPage() {
               </div>
             </label>
 
+            {/* erro */}
             {error && <p className={styles.error}>{error}</p>}
 
+            {/* submit */}
             <button type="submit" className={styles.button} disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
             </button>
