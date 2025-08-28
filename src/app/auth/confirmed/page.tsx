@@ -9,6 +9,7 @@ function ConfirmedInner() {
 
   useEffect(() => {
     const redirect = sp.get('redirect') || '/dashboard';
+    // redireciono no cliente; a página pode ser estática tranquilamente
     router.replace(redirect);
   }, [router, sp]);
 
@@ -16,12 +17,10 @@ function ConfirmedInner() {
 }
 
 export default function ConfirmedPage() {
+  // Suspense é obrigatório quando se usa useSearchParams
   return (
     <Suspense fallback={null}>
       <ConfirmedInner />
     </Suspense>
   );
 }
-
-// evita pré-render estático dessa página
-export const dynamic = 'force-dynamic';
