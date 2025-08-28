@@ -2,7 +2,7 @@
 import { Suspense } from "react";
 import LoginClient from "./LoginClient";
 
-// Evita pre-render estático do /login (opcional, mas ajuda em auth)
+// evita pre-render estático da rota de auth
 export const dynamic = "force-dynamic";
 
 export default function Page() {
