@@ -1,17 +1,20 @@
 'use client';
 
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import styles from './login.module.css';
 
-export default function LoginPage() {
+/** Evita prerender de uma página que depende do estado de auth / search params */
+export const dynamic = 'force-dynamic';
+
+function LoginContent() {
   const router = useRouter();
   const sp = useSearchParams();
   const redirect = sp.get('redirect') ?? '/dashboard';
 
-  const supabase = React.useMemo(
+  const supabase = useMemo(
     () =>
       createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -138,6 +141,15 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+/** Wrapper exigido pelo Next para useSearchParams */
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className={styles.suspense}>Carregando…</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
 
