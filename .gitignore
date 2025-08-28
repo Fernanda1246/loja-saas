@@ -48,3 +48,5 @@ next-env.d.ts
 .idea/             # <— opcional (JetBrains)
 
 # (resto do seu arquivo igual)
+
+.vercel

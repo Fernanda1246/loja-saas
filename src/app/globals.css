@@ -1,3 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* seus overrides abaixo */
+
 /* Forçar estilos no Supabase Auth UI */
 .supabase-auth-ui_ui-input,
 input.sbui-input {

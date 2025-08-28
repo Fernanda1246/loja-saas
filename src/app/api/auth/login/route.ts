@@ -25,9 +25,7 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value;
-        },
+        get(name: string) { return req.cookies.get(name)?.value; },
         set(name: string, value: string, options: CookieOptions) {
           res.cookies.set({ name, value, ...options });
         },
@@ -40,29 +38,22 @@ export async function POST(req: NextRequest) {
   );
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-
   if (error) {
     const msg =
-      /Invalid login credentials/i.test(error.message)
-        ? "Credenciais inválidas."
-        : /Email not confirmed/i.test(error.message)
-        ? "E-mail não confirmado."
-        : "Não foi possível entrar.";
+      /Invalid login credentials/i.test(error.message) ? "Credenciais inválidas." :
+      /Email not confirmed/i.test(error.message) ? "E-mail não confirmado." :
+      "Não foi possível entrar.";
 
     return NextResponse.redirect(
-      new URL(
-        `/login?error=${encodeURIComponent(msg)}&redirect=${encodeURIComponent(redirectTo)}`,
-        req.url
-      ),
+      new URL(`/login?error=${encodeURIComponent(msg)}&redirect=${encodeURIComponent(redirectTo)}`, req.url),
       303
     );
   }
 
-  // ✅ cookies foram escritos no MESMO response; navegador segue para /dashboard
-  return res;
+  return res; // ✅ Set-Cookie + 303 no MESMO response
 }
 
-// opcional, só para teste rápido da rota no navegador
+// opcional p/ validar no navegador
 export async function GET() {
   return new NextResponse("login route OK", { status: 200 });
 }
