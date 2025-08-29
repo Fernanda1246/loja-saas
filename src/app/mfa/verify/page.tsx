@@ -1,4 +1,4 @@
-// app/mfa/verify/page.tsx
+// src/app/mfa/verify/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -20,7 +20,10 @@ const CSS = `
 export default function MfaVerifyPage() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-  const supabase = useMemo<SupabaseClient | null>(() => (url && anon ? createClient(url, anon) : null), [url, anon]);
+  const supabase = useMemo<SupabaseClient | null>(
+    () => (url && anon ? createClient(url, anon) : null),
+    [url, anon]
+  );
 
   const [factorId, setFactorId] = useState<string | null>(null);
   const [challengeId, setChallengeId] = useState<string | null>(null);
@@ -29,7 +32,7 @@ export default function MfaVerifyPage() {
   const [ok, setOk] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // escolhe 1º TOTP e cria challenge
+  // pega 1º TOTP e cria challenge
   useEffect(() => {
     (async () => {
       if (!supabase) return;
@@ -56,7 +59,7 @@ export default function MfaVerifyPage() {
     setLoading(false);
     if (resp.error) return setErr(resp.error.message);
     setOk(true);
-    // sessão agora é AAL2 — segue para o app
+    // sessão vira AAL2 → vai pro app
     if (typeof window !== "undefined") window.location.replace("/dashboard");
   }
 
@@ -69,14 +72,27 @@ export default function MfaVerifyPage() {
             <>
               <h1 className="title">Verificação em 2 passos</h1>
               <p className="sub">Digite o código do seu app autenticador.</p>
+
               <div className="field">
                 <label htmlFor="code">Código</label>
-                <input id="code" className="input" placeholder="123456" value={code} onChange={(e)=>setCode(e.target.value)} />
+                <input
+                  id="code"
+                  className="input"
+                  placeholder="123456"
+                  value={code}
+                  onChange={(e)=>setCode(e.target.value)}
+                />
               </div>
-              <button className="btn btn-primary" onClick={verify} disabled={loading || !challengeId}>
+
+              <button
+                className="btn btn-primary"
+                onClick={verify}
+                disabled={loading || !challengeId}
+              >
                 {loading ? "Verificando…" : "Confirmar"}
               </button>
-              {err && <div className="alert" style={{ borderColor: "#fecaca", color:"#b91c1c" }}>{err}</div>}
+
+              {err && <div className="alert" style={{ borderColor:"#fecaca", color:"#b91c1c" }}>{err}</div>}
               <div className="alert">
                 <small>Problemas? <Link href="/mfa/setup">Configurar novamente</Link></small>
               </div>
