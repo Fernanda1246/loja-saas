@@ -1,59 +1,44 @@
-export const runtime = "nodejs";
+﻿import { cookies as nextCookies } from "next/headers";
+import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
-import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+function norm(opts: any) {
+  const secure = process.env.NODE_ENV === "production";
+  return { path: "/", sameSite: "lax", secure, ...opts };
+}
 
-export async function POST(req: NextRequest) {
-  const form = await req.formData();
-  const email = String(form.get("email") || "").trim();
-  const password = String(form.get("password") || "");
-  const redirectTo = String(form.get("redirect") || "/dashboard");
-
+export async function POST(req: Request) {
+  const { email, password } = (await req.json()) as { email?: string; password?: string };
   if (!email || !password) {
-    return NextResponse.redirect(
-      new URL(`/login?error=${encodeURIComponent("Informe e-mail e senha.")}`, req.url),
-      303
-    );
+    return NextResponse.json({ ok: false, error: "E-mail e senha são obrigatórios." }, { status: 400 });
   }
 
-  // response de redirect que TAMBÉM receberá os Set-Cookie
-  const to = new URL(redirectTo, req.url).toString();
-  const res = NextResponse.redirect(to, 303);
+  const reqCookies = await nextCookies();
+  const res = NextResponse.json({ ok: true });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) { return req.cookies.get(name)?.value; },
-        set(name: string, value: string, options: CookieOptions) {
-          res.cookies.set({ name, value, ...options });
+        get(name: string) {
+          return reqCookies.get(name)?.value;
         },
-        remove(name: string, options: CookieOptions) {
-          res.cookies.set({ name, value: "", ...options, maxAge: 0 });
+        set(name: string, value: string, options: any) {
+          res.cookies.set({ name, value, ...norm(options) });
+        },
+        remove(name: string, options: any) {
+          res.cookies.set({ name, value: "", ...norm(options), maxAge: 0 });
         },
       },
-      cookieOptions: { path: "/", sameSite: "lax", secure: true },
     }
   );
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    const msg =
-      /Invalid login credentials/i.test(error.message) ? "Credenciais inválidas." :
-      /Email not confirmed/i.test(error.message) ? "E-mail não confirmado." :
-      "Não foi possível entrar.";
-
-    return NextResponse.redirect(
-      new URL(`/login?error=${encodeURIComponent(msg)}&redirect=${encodeURIComponent(redirectTo)}`, req.url),
-      303
-    );
+    return NextResponse.json({ ok: false, error: error.message }, { status: 401 });
   }
 
-  return res; // ✅ Set-Cookie + 303 no MESMO response
-}
-
-// opcional p/ validar no navegador
-export async function GET() {
-  return new NextResponse("login route OK", { status: 200 });
+  // sb-access-token / sb-refresh-token são gravados via res.cookies.set
+  return res;
 }

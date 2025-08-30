@@ -1,8 +1,11 @@
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-export async function getSupabaseServer() {
-  const cookieStore = await cookies(); // Next 15 pode ser async
+export const createSupabaseServer = async (): Promise<SupabaseClient> => {
+  // no teu setup, cookies() é Promise → usa await
+  const cookieStore = await cookies();
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -11,10 +14,10 @@ export async function getSupabaseServer() {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        // Em Server Component não mutamos cookies:
+        // Em Server Components, Next não permite mutar cookies:
         set() {},
-        remove() {},
-      },
+        remove() {}
+      }
     }
   );
-}
+};

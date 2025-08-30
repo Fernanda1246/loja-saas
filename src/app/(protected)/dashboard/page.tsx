@@ -7,7 +7,6 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function DashboardPage() {
-  // ✅ Next 15.5 tipa como Promise → precisa de await
   const cookieStore = await getCookies();
 
   const supabase = createServerClient(
@@ -18,10 +17,9 @@ export default async function DashboardPage() {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        // em Server Component não dá pra mutar cookies
         set() {},
-        remove() {},
-      },
+        remove() {}
+      }
     }
   );
 

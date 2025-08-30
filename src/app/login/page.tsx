@@ -1,138 +1,68 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import styles from "./login.module.css";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
-  const supabase = createClientComponentClient();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
-  async function waitForSession(timeoutMs = 2000) {
-    const start = Date.now();
-    while (Date.now() - start < timeoutMs) {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) return data.session;
-      await new Promise((r) => setTimeout(r, 150));
-    }
-    return null;
-  }
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectDest = searchParams.get("redirect") || "/dashboard";
 
-  async function handleLogin(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setErr(null);
     setLoading(true);
-    setErrorMsg(null);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-
-    if (error) {
-      console.error("[login] signIn error:", error);
+    try {
+      const r = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await r.json();
+      if (!r.ok || !data?.ok) {
+        setErr(data?.error || "Falha ao entrar.");
+        return;
+      }
+      router.replace(redirectDest);
+    } catch (e: any) {
+      setErr(e?.message || "Erro inesperado.");
+    } finally {
       setLoading(false);
-      setErrorMsg(error.message || "Não foi possível entrar. Verifique suas credenciais.");
-      return;
-    }
-
-    // garantia extra: aguarda cookie/sessão aparecer
-    const sess = await waitForSession(2500);
-    if (!sess) {
-      console.warn("[login] sessão não visível ainda; vamos redirecionar mesmo assim");
-    }
-
-    // redireciona com navegação completa (evita cache/SSR antigo)
-    if (typeof window !== "undefined") {
-      window.location.href = redirect;
     }
   }
 
   return (
-    <div className={styles.page}>
-      {/* Lado esquerdo (hero) */}
-      <section className={styles.hero}>
-        <h1 className={styles.heroTitle}>
-          Bem-vindo de volta!
-          <span className={styles.heroSubtitle}>
-            Acesse sua conta para continuar
-          </span>
-        </h1>
-      </section>
+    <main style={{ minHeight: "100svh", display: "grid", placeItems: "center", background: "#f1f5f9", padding: 16 }}>
+      <form onSubmit={onSubmit} style={{ width: "100%", maxWidth: 380, background: "#fff", padding: 20, borderRadius: 12, boxShadow: "0 10px 30px rgba(0,0,0,.06)" }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Entrar</h1>
 
-      {/* Formulário */}
-      <section className={styles.formSide}>
-        <div className={styles.card}>
-          <h2 className={styles.title}>Login</h2>
+        <label style={{ display: "grid", gap: 6, marginBottom: 12 }}>
+          <span style={{ fontSize: 12, color: "#475569" }}>E-mail</span>
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+                 style={{ padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 8 }} />
+        </label>
 
-          <form onSubmit={handleLogin} className={styles.form} autoComplete="on">
-            <label className={styles.label}>
-              <span>E-mail</span>
-              <input
-                className={styles.input}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seuemail@exemplo.com"
-                required
-                autoComplete="email"
-              />
-            </label>
+        <label style={{ display: "grid", gap: 6, marginBottom: 16 }}>
+          <span style={{ fontSize: 12, color: "#475569" }}>Senha</span>
+          <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+                 style={{ padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 8 }} />
+        </label>
 
-            <label className={styles.label}>
-              <span>Senha</span>
-              <div className={styles.passwordWrap}>
-                <input
-                  className={styles.input}
-                  type={showPass ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  aria-label={showPass ? "Ocultar senha" : "Mostrar senha"}
-                  className={styles.eyeBtn}
-                  onClick={() => setShowPass((v) => !v)}
-                  tabIndex={-1}
-                >
-                  {showPass ? (
-                    // olho fechado
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C7 20 2.73 16.11 1 12c.74-1.64 1.82-3.12 3.17-4.35"/>
-                      <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83"/>
-                      <path d="M6.1 6.1 1 1"/>
-                      <path d="m22.54 11.88c-1.3 2.59-4.55 6.12-10.54 6.12"/>
-                      <path d="M14.12 9.88a2 2 0 0 0-2.83-2.83"/>
-                      <path d="M17.94 6.06 22 2"/>
-                    </svg>
-                  ) : (
-                    // olho aberto
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/>
-                      <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </label>
+        {err && <div style={{ color: "#b91c1c", fontSize: 13, marginBottom: 10 }}>{err}</div>}
 
-            {errorMsg && <p className={styles.error}>{errorMsg}</p>}
-
-            <button type="submit" className={styles.button} disabled={loading}>
-              {loading ? "Entrando..." : "Entrar"}
-            </button>
-          </form>
-        </div>
-      </section>
-    </div>
+        <button type="submit" disabled={loading}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "none",
+                         color: "#fff", background: loading ? "#0f766e99" : "#0f766e",
+                         fontWeight: 700, cursor: loading ? "not-allowed" : "pointer" }}>
+          {loading ? "Entrando..." : "Entrar"}
+        </button>
+      </form>
+    </main>
   );
 }
