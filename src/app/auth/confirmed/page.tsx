@@ -1,15 +1,14 @@
-import { redirect } from "next/navigation";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseServer } from '@/lib/supabase/server';
 
 export default async function ConfirmedPage() {
   const supabase = await createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?redirect=/auth/confirmed");
 
   return (
     <main style={{ padding: 24 }}>
-      <h1>Conta confirmada ✅</h1>
-      <p>Sua autenticação foi concluída.</p>
+      <h1>E-mail confirmado 🎉</h1>
+      <p>{user?.email ? `Conta: ${user.email}` : 'Você já pode acessar sua conta.'}</p>
+      <a href="/dashboard" style={{ color: '#0f766e', fontWeight: 700 }}>Ir para o dashboard</a>
     </main>
   );
 }

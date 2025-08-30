@@ -1,15 +1,14 @@
-import { redirect } from "next/navigation";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseServer } from '@/lib/supabase/server';
 
-export default async function MFAPage() {
+export default async function MfaPage() {
   const supabase = await createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?redirect=/mfa");
+  if (!user) return null;
 
   return (
     <main style={{ padding: 24 }}>
-      <h1>Autenticação de 2 Fatores</h1>
-      <p>Em breve: configurar/verificar MFA.</p>
+      <h1>Configurar MFA</h1>
+      <p>Olá, {user.email}</p>
     </main>
   );
 }

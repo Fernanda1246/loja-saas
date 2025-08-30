@@ -1,23 +1,29 @@
-import { cookies } from 'next/headers';
+import { cookies as nextCookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export const createSupabaseServer = async (): Promise<SupabaseClient> => {
-  // no teu setup, cookies() é Promise → usa await
-  const cookieStore = await cookies();
+// Mantém o nome que teu código espera:
+export async function createSupabaseServer(): Promise<SupabaseClient> {
+  const cookieStore = await nextCookies(); // <- no teu setup é Promise
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // Em Server Components não dá pra mutar cookies aqui.
+      // A leitura funciona; escrita deve ser feita em Route Handler / Middleware.
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        // Em Server Components, Next não permite mutar cookies:
-        set() {},
-        remove() {}
-      }
+        setAll(_cookies) {
+          // no-op em RSC/Server Component (Next não permite mutar aqui)
+        },
+      },
     }
   );
-};
+}
+
+// Alias para compatibilidade com imports antigos:
+// import { getSupabaseServer } from '@/lib/supabase/server'
+export const getSupabaseServer = createSupabaseServer;
