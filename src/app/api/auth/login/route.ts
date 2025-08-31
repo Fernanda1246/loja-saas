@@ -1,21 +1,19 @@
-﻿import { NextResponse } from "next/server";
+﻿// src/app/api/auth/login/route.ts
+import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function POST(request: Request) {
   const { email, password, redirectTo = "/dashboard" } = await request.json();
 
-  // Base response no qual iremos setar as cookies
+  // Base response no qual vamos setar as cookies
   const res = NextResponse.json({ ok: true });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // ou publishable
     {
       cookies: {
-        getAll() {
-          // não precisamos ler aqui
-          return [];
-        },
+        getAll() { return []; }, // não precisamos ler aqui
         setAll(cookies) {
           cookies.forEach(({ name, value, options }) => {
             res.cookies.set({ name, value, ...options });
@@ -25,9 +23,18 @@ export async function POST(request: Request) {
     }
   );
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 401 });
+  const { error, data } = await supabase.auth.signInWithPassword({ email, password });
 
-  // cookies já foram setadas em `res`, só redirecionar
-  return NextResponse.redirect(new URL(redirectTo, request.url), { headers: res.headers });
+  if (error) {
+    return new NextResponse(
+      JSON.stringify({ ok: false, error: error.message }),
+      { status: 401, headers: res.headers }
+    );
+  }
+
+  // ✅ JSON + cookies já setadas no mesmo response
+  return new NextResponse(
+    JSON.stringify({ ok: true, redirectTo, user: data.user }),
+    { status: 200, headers: res.headers }
+  );
 }
